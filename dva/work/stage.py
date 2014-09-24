@@ -14,7 +14,7 @@ from ..tools.retrying import retrying, EAgain
 from ..connection.cache import get_connection, assert_connection, connection_cache_key, drop_connection, ConnectionCacheError
 from ..connection.contextmanager import connection as connection_ctx
 from data import brief
-from common import RESULT_ERROR, RESULT_PASSED, CLOUD_DRIVER_MAXWAIT
+from common import RESULT_ERROR, RESULT_PASSED, RESULT_SKIP, CLOUD_DRIVER_MAXWAIT
 from params import when_enabled
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ SETUP_ATTEMPTS = 30
 SETUP_SETTLEWAIT = 30
 SSH_USERS = ['root', 'ec2-user', 'fedora']
 DEFAULT_GLOBAL_SETUP_SCRIPT_TIMEOUT = 120
+OLD_BASH_HISTORY_FILE = '~/DVA_OLD_BASH_HISTORY'
 
 STAGES={}
 
@@ -37,6 +38,9 @@ class InstantiationError(StageError):
 class SetUpError(StageError):
     '''Setting-up instance failed'''
 
+class SkipError(StageError):
+    '''skip particular data entry'''
+
 
 def stage(fn):
     '''stage handling decorator; saves stage name and status'''
@@ -47,6 +51,11 @@ def stage(fn):
         try:
             ret = fn(params)
             params['stage_result'] = RESULT_PASSED
+        except SkipError as err:
+            # e.g. hw not supported in region
+            params['stage_exception'] = traceback.format_exc()
+            params['stage_result'] = RESULT_SKIP
+            raise SkipError('%s: %s' % (fn.__name__, err))
         except StageError as err:
             params['stage_exception'] = traceback.format_exc()
             params['stage_result'] = RESULT_ERROR
@@ -73,7 +82,18 @@ def create_instance(params):
     except cloud.base.TemporaryCloudException as err:
         logger.debug('Temporary Cloud Exception: %s', err)
         raise EAgain(err)
+    except cloud.base.SkipCloudException as err:
+        # this instance type can't be created in this region
+        logger.debug('Skip Cloud Exception: %s', err)
+        raise SkipError(err)
     return params
+
+
+def save_bash_history(connection):
+    '''prevent dva messing with bash history by saving any original history in a separate file'''
+    # save old hist, but just once i.e. do not copy history if old hist file already exist
+    Expect.ping_pong(connection, '[ -f ~/.bash_history -a ! -f %s ] && cp -f ~/.bash_history %s ; touch %s ; echo "###DONE###"' % \
+            (OLD_BASH_HISTORY_FILE, OLD_BASH_HISTORY_FILE, OLD_BASH_HISTORY_FILE), '(?s).*\r\n###DONE###\r\n.*', 10)
 
 @stage
 @when_enabled
@@ -92,6 +112,7 @@ def attempt_ssh(params):
         try:
             with connection_ctx(hostname, user, ssh_key) as con:
                 assert_connection(con)
+                save_bash_history(con)
         except EAgain as err:
             logger.debug('%s %s %s connection failure: %s --- trying other user', hostname, user, ssh_key, err)
         else:
@@ -127,8 +148,9 @@ def allow_root_login(params):
 
     # Exceptions cause retries, save for ExpectFailed
     with connection_ctx(host, user, ssh_key) as con:
+        save_bash_history(con)
         try:
-            Expect.ping_pong(con, command, '\r\nSUCCESS\r\n')
+            Expect.ping_pong(con, command, '(?s).*\r\nSUCCESS\r\n.*')
         except ExpectFailed as err:
             # retry
             raise EAgain(err)

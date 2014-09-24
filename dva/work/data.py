@@ -23,7 +23,8 @@ CONFIG_FILES = ['dva.yaml', '~/.dva.yaml', '/etc/dva.yaml']
 DEFAULT_FIELDS = {
     'cloud': 'ec2',
     'enabled': True,
-    'bmap': {}
+    'bmap': {},
+    'userdata': ''
 }
 
 EPHEMERAL_FIELDS = ['credentials', 'global_setup_script', 'instance', 'ssh', 'test_stages', 'user_data',
@@ -120,7 +121,7 @@ def expand_record_tests(record):
                 not any([re.match(pattern, test_name) for pattern in record.get('test_blacklist', [])]) and \
                 any([re.match(pattern, tag) for tag in tags(TEST_CLASSES[test_name]) \
                     for pattern in record.get('tags_whitelist', ['default'])]) and \
-                not any([re.match(pattern, tag) for tag in tags(TEST_STAGES[test_name]) \
+                not any([re.match(pattern, tag) for tag in tags(TEST_CLASSES[test_name]) \
                     for pattern in record.get('tags_blacklist', [])])
         ]
         for stage in sorted(TEST_STAGES) if \

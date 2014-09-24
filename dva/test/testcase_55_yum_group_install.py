@@ -7,7 +7,8 @@ class testcase_55_yum_group_install(Testcase):
     Try to install 'Development tools' group with yum
     """
     stages = ['stage1']
-    tags = ['default']
+    after = ['testcase_50_yum_package_install']
+    tags = ['default', 'content']
     applicable = {"product": "(?i)RHEL|BETA", "version": "OS (>=5.5, !=6.0)"}
 
     # pylint: disable=W0613

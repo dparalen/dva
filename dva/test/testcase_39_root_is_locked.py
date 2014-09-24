@@ -13,5 +13,5 @@ class testcase_39_root_is_locked(Testcase):
     def test(self, connection, params):
         """ Perform test """
 
-        self.get_return_value(connection, 'passwd -S root | grep -q "Password locked"')
+        self.get_return_value(connection, 'passwd -S root | grep -q LK')
         return self.log

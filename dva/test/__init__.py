@@ -56,4 +56,3 @@ import testcase_98_dmesg_stage1
 import testcase_98_kernel_upgrade_pre
 import testcase_98_package_install_pre
 import testcase_98_kernel_parameter
-import testcase_99_reboot

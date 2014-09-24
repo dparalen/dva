@@ -5,15 +5,15 @@ import time
 import logging
 import traceback
 from stage import create_instance, attempt_ssh, allow_root_login, global_setup_script, terminate_instance
-from test import execute_tests
+from test import execute_stages, TEST_WORKER_POOL_SIZE
 from common import RESULT_ERROR
-from stage import STAGES, StageError
+from stage import STAGES, StageError, SkipError
 
 
 logger = logging.getLogger(__name__)
 
 
-def process(params):
+def process(params, pool_size=TEST_WORKER_POOL_SIZE):
     '''process required acctions'''
     terminate = False
     try:
@@ -26,8 +26,11 @@ def process(params):
         yield params
         params = global_setup_script(params)
         yield params
-        for test_result in execute_tests(params):
+        for test_result in execute_stages(params, pool_size=pool_size):
             yield test_result
+    except SkipError as err:
+        logger.debug('encountered skip error: %s', err)
+        yield params
     except StageError as err:
         logger.debug('encountered stage error: %s', err)
         yield params

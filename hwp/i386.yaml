@@ -8,6 +8,8 @@
       yum -y install xdelta
       touch /userdata_test
       date >> /userdata_test
+  bmap:
+  - {delete_on_termination: true, name: /dev/sda1, size: '15'}
 - arch: 'i386'
   cpu: '1'
   memory: '1700000'

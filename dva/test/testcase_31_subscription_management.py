@@ -1,14 +1,14 @@
 """ This module contains testcase_31_subscription_management test """
 from testcase import Testcase
 
-
 class testcase_31_subscription_management(Testcase):
     """
     Subscription manager shoud be disabled
     """
     stages = ['stage1']
     applicable = {'product': '(?i)RHEL|BETA', 'version': 'OS (> 5.5)'}
-    tags = ['default']
+    after = ['testcase_27_yum_repos']
+    tags = ['default', 'content']
 
     def test(self, connection, params):
         """ Perform test """

@@ -37,7 +37,7 @@
   virtualization: hvm
 - {arch: 'x86_64', cpu: '4', memory: '14000000', cloudhwname: m3.xlarge, virtualization: 'hvm', userdata: *USERDATA}
 - {arch: 'x86_64', cpu: '8', memory: '29700000', cloudhwname: m3.2xlarge, virtualization: 'hvm', userdata: *USERDATA}
-- {arch: 'x86_64', cpu: '8', memory: '21600000', cloudhwname: cc1.4xlarge, virtualization: 'hvm', userdata: *USERDATA}
+- {arch: 'x86_64', cpu: '16', memory: '21600000', cloudhwname: cc1.4xlarge, virtualization: 'hvm', userdata: *USERDATA}
 - {arch: 'x86_64', cpu: '32', memory: '60500000', cloudhwname: cc2.8xlarge, virtualization: 'hvm', userdata: *USERDATA}
 - {arch: 'x86_64', cpu: '16', memory: '20900000', cloudhwname: cg1.4xlarge, virtualization: 'hvm', userdata: *USERDATA}
 - {arch: 'x86_64', cpu: '16', memory: '60500000', cloudhwname: hi1.4xlarge, virtualization: 'hvm', userdata: *USERDATA}

@@ -12,7 +12,7 @@ class testcase_37_sshd_bug923996(Testcase):
     applicable = {
         'product': '(?i)RHEL|BETA',
         'version': lambda ver: ver >= Version('5.5') and ver < Version('5.10') or \
-                            ver >= Version('6.0') and ver < Version('6.5')
+                            ver >= Version('6.4') and ver < Version('7.0')
     }
 
     def test(self, connection, params):

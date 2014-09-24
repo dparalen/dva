@@ -10,6 +10,7 @@ from dva.tools import catching
 # load all testing modules
 from dva.test import *
 from dva.report.bug_main import DEFAULT_URL, DEFAULT_COMPONENT, DEFAULT_PRODUCT
+from dva.work.test import TEST_WORKER_POOL_SIZE
 
 RE_ANY = re.compile('.*')
 
@@ -60,13 +61,14 @@ def svalidate(loglevel, conf, istream, ostream, test_whitelist, test_blacklist, 
 @APP.cmd_arg('-g', '--tags-whitelist', help='regexp tags list', default=['default'], nargs='+', metavar='PATTERN')
 @APP.cmd_arg('-G', '--tags-blacklist', help='regexp tags list', default=[], nargs='+', metavar='PATTERN')
 @APP.cmd_arg('-n', '--no-action', help='take no action', action='store_true')
-@APP.cmd_arg('-P', '--pool_size', help='greenlet pool size', default=64, type=int)
+@APP.cmd_arg('--parallel-instances', help='greenlet pool size', default=64, type=int)
+@APP.cmd_arg('--parallel-tests', help='greenlet pool size', default=4, type=int)
 def validate(loglevel, conf, istream, ostream, test_whitelist, test_blacklist, stage_whitelist, stage_blacklist,
-    tags_whitelist, tags_blacklist, no_action, pool_size):
+    tags_whitelist, tags_blacklist, no_action, parallel_instances, parallel_tests):
     logging.basicConfig(level=getattr(logging, loglevel))
     from dva.work.data_parallel_main import main
     return main(conf, istream, ostream, test_whitelist, test_blacklist, stage_whitelist, stage_blacklist,
-                tags_whitelist, tags_blacklist, no_action, pool_size)
+                tags_whitelist, tags_blacklist, no_action, parallel_instances, parallel_tests)
 
 
 @APP.cmd(help='report result')
@@ -78,6 +80,14 @@ def result(loglevel, conf, istream, ostream, verbose):
     from dva.report.main import main
     return main(conf, istream, ostream, verbose)
 
+@APP.cmd(help='summary of result')
+@APP.cmd_arg('-i', '--istream', help='input filename', type=argparse.FileType('r'), default=sys.stdin)
+@APP.cmd_arg('-t', '--test-whitelist', help='comma delimited testname list', default=[], nargs='+', metavar='LIST')
+@APP.cmd_arg('-c', '--compare', help='comma delimited list of areas that are compared', default=['ami'], nargs='+', metavar='LIST')
+def summary(loglevel, conf, istream,test_whitelist,compare):
+    logging.basicConfig(level=getattr(logging, loglevel))
+    from dva.report.summary_main import main
+    return main(conf, istream,test_whitelist,compare)
 
 @APP.cmd(help='report result as bugzilla')
 @APP.cmd_arg('-i', '--istream', help='input filename', type=argparse.FileType('r'), default=sys.stdin)

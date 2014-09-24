@@ -7,7 +7,8 @@ class testcase_50_yum_package_install(Testcase):
     Try to install package with yum
     """
     stages = ['stage1']
-    tags = ['default']
+    tags = ['default', 'content']
+    after = ['testcase_31_subscription_management']
     applicable = {"product": "(?i)rhel|beta", "version": "OS (>=5.5, !=6.0)"}
 
     # pylint: disable=W0613

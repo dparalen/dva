@@ -9,7 +9,7 @@ import tempfile
 import aggregate
 from ..tools.retrying import retrying, EAgain
 from ..work.data import load_yaml, save_result
-from ..work.common import RESULT_PASSED
+from ..work.common import RESULT_PASSED, RESULT_SKIP
 from result import get_hwp_result
 from gevent.pool import Pool
 from gevent.coros import RLock
@@ -86,7 +86,7 @@ def process_ami_record(ami, version, arch, region, itype, user, password, ami_da
     ami_result = RESULT_PASSED
     for hwp in ami_data:
         sub_result, sub_log = get_hwp_result(ami_data[hwp], verbose)
-        if sub_result != RESULT_PASSED and ami_result == RESULT_PASSED:
+        if sub_result not in [RESULT_PASSED, RESULT_SKIP] and ami_result == RESULT_PASSED:
             ami_result = sub_result
         bug.addcomment('# %s: %s\n%s' % (hwp, sub_result, '\n'.join(sub_log)))
     bug.setstatus(ami_result == RESULT_PASSED and 'VERIFIED' or 'ON_QA')
@@ -99,7 +99,7 @@ def main(config, istream, ostream, user=None, password=None, url=DEFAULT_URL,
     logger.debug('got credentials: %s, %s', user, password)
     statuses = []
     data = load_yaml(istream)
-    agg_data = aggregate.apply(data, 'region', 'version', 'arch', 'itype', 'ami', 'cloudhwname')
+    agg_data = aggregate.nested(data, 'region', 'version', 'arch', 'itype', 'ami', 'cloudhwname')
     for region in agg_data:
         logger.debug(region)
         for version in agg_data[region]:

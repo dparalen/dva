@@ -1,7 +1,7 @@
 """ Result parsing functions """
 import textwrap
 import aggregate
-from ..work.common import RESULT_PASSED, RESULT_FAILED, RESULT_ERROR
+from ..work.common import RESULT_PASSED, RESULT_FAILED, RESULT_ERROR, RESULT_SKIP
 
 COMMON_COMMAND_KEYS_ORDERED=('command', 'match', 'result', 'value', 'actual', 'expected', 'comment')
 
@@ -53,7 +53,7 @@ def get_hwp_result(data, verbose=False):
         else:
             # stage result
             sub_result, sub_log = get_stage_result(res, verbose)
-        if sub_result in [RESULT_ERROR, RESULT_FAILED] and ret == RESULT_PASSED:
+        if sub_result in [RESULT_ERROR, RESULT_FAILED, RESULT_SKIP] and ret == RESULT_PASSED:
             ret = sub_result
         log.extend(sub_log)
     return ret, log
@@ -65,7 +65,7 @@ def get_ami_result(data, verbose=False):
     for hwp in data:
         hwp_index = len(log)
         sub_result, sub_log = get_hwp_result(data[hwp], verbose)
-        if sub_result != RESULT_PASSED and ret == RESULT_PASSED:
+        if sub_result not in [RESULT_PASSED, RESULT_SKIP] and ret == RESULT_PASSED:
            ret = sub_result
         header = '%s: %s' % (hwp, sub_result)
         log.insert(hwp_index, '-' * len(header))
@@ -79,7 +79,7 @@ def get_overall_result(data, verbose=False):
     Get human-readable representation of the result; partitioned by ami
     returns a tuple of an overal result and list of tuples overal_result, [(ami_resutl, ami_log), ...]
     """
-    agg_data = aggregate.apply(data, 'region', 'arch', 'itype', 'ami', 'cloudhwname')
+    agg_data = aggregate.nested(data, 'region', 'arch', 'itype', 'ami', 'cloudhwname')
     ret = RESULT_PASSED
     log = []
     for region in agg_data:

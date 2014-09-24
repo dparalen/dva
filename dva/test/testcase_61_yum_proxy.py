@@ -9,7 +9,8 @@ class testcase_61_yum_proxy(Testcase):
     Try to use yum with proxy
     """
     stages = ['stage1']
-    tags = ['default']
+    after = ['testcase_60_yum_update']
+    tags = ['default', 'content']
 
     def test(self, connection, params):
         """ Perform test """
