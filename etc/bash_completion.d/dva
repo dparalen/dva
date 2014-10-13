@@ -1,0 +1,54 @@
+#!/bin/bash
+# bash completion support for validation.
+#
+# The contained completion routines provide support for completing
+# dva subsections, commands and options.
+
+# _elogin_dva_options() function generates completion of the first
+# level options, avoiding duplicates between short and long options.
+# Takes two arguments:
+# 1: COMP_LINE
+# 2: dva_options
+
+_dva_tab() {
+  
+  local dva_cur dva_options dva_sections grep_dva_sections optional_svalidate_args optional_result_args
+  
+  COMPREPLY=()
+  dva_cur=${COMP_WORDS[COMP_CWORD]}
+  dva_options="-h --help -l --loglevel -c --conf"
+  dva_sections="svalidate validate result bugzilla"
+  grep_dva_sections=$(echo $COMP_LINE | egrep -o "(svalidate|validate|result|bugzilla)" )
+  optional_svalidate_args="-h --help -i --istream -o --ostream -t --test-whitelist \
+                           -T --test-blacklist -s --stage-whitelist -S --stage-blacklist \
+                           -g --tags-whitelist -G --tags-blacklist -n --no-action"
+  
+  optional_result_args="-h --help -i --istream -o --ostream -V --verbose"
+  if [[ $COMP_LINE == *\ -h?* ]] \
+    || [[ $COMP_LINE == *--help?* ]]; then
+      return
+  fi
+  
+  if [[ -z "${grep_dva_sections}" ]]; then
+    COMPREPLY=( $( compgen -W "$dva_options $dva_sections" -- "$dva_cur" ) )
+    return
+  fi
+  
+  #$COMP_LINE 2>&1 | egrep -q "^dva: error:" && return
+  case "$grep_dva_sections" in
+    svalidate)
+      COMPREPLY=( $( compgen -W "$optional_svalidate_args" -- $dva_cur ) );;
+    validate)
+      COMPREPLY=( $( compgen -W "$optional_svalidate_args -P --pool_size" -- $dva_cur ) );;
+    result)
+      COMPREPLY=( $( compgen -W "$optional_result_args" -- $dva_cur ) );;
+    bugzilla)
+      COMPREPLY=( $( compgen -W "$optional_result_args -u --user -p --password -U --url \
+                                                       -C --component -R --product \
+                                                       -P --pool_size" -- $dva_cur ) );;
+  esac
+
+}
+
+complete -F _dva_tab dva
+
